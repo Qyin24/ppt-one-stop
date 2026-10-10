@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+
+# 安装测试产物
+/tmp/
+*.log
+
+# 生成的演示文稿（不要提交）
+output/
+*.pptx
+*.pdf
+preview-v*/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# 保留 references/ 下的 markdown（上面的 *.pdf 等规则不影响 .md）

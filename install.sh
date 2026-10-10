@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-REPO_URL="https://github.com/OWNER/ppt-one-stop.git"
+REPO_URL="https://github.com/Qyin24/ppt-one-stop.git"
 LOCAL_DIR=""
 HOME_OVERRIDE=""
 DRY_RUN=0

@@ -25,12 +25,12 @@
 把下面这句话发给对方的 DSH：
 
 ```
-把 https://github.com/OWNER/ppt-one-stop 安装到我的 DSH 里，装到 ~/.dsh/skills/ 和 ~/.agents/skills/
+把 https://github.com/Qyin24/ppt-one-stop 安装到我的 DSH 里，装到 ~/.dsh/skills/ 和 ~/.agents/skills/
 ```
 
 DSH 会自动克隆仓库、拷贝三个技能、校验 `SKILL.md` 格式，并报告安装位置。装完**无需重启**。
 
-> 把 `OWNER` 换成实际仓库所有者。
+> 仓库地址已填好，直接复制即可。
 
 ### 方式二：跑安装脚本
 
@@ -47,11 +47,11 @@ DSH 会自动克隆仓库、拷贝三个技能、校验 `SKILL.md` 格式，并�
 可指定其他仓库地址或先做演练：
 
 ```bash
-./install.sh --repo https://github.com/OWNER/ppt-one-stop.git
+./install.sh --repo https://github.com/Qyin24/ppt-one-stop.git
 ./install.sh --local ./ppt-one-stop-repo --dry-run
 ./install.sh --home /custom/path
 
-.\install.ps1 -Repo https://github.com/OWNER/ppt-one-stop.git
+.\install.ps1 -Repo https://github.com/Qyin24/ppt-one-stop.git
 .\install.ps1 -LocalDir .\ppt-one-stop-repo -DryRun
 .\install.ps1 -TargetHome C:\custom\path
 ```

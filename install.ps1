@@ -7,7 +7,7 @@
     从默认仓库地址克隆并安装。
 
 .EXAMPLE
-    .\install.ps1 -Repo https://github.com/OWNER/ppt-one-stop.git
+    .\install.ps1 -Repo https://github.com/Qyin24/ppt-one-stop.git
     从指定地址安装。
 
 .EXAMPLE
@@ -16,7 +16,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string] $Repo = 'https://github.com/OWNER/ppt-one-stop.git',
+    [string] $Repo = 'https://github.com/Qyin24/ppt-one-stop.git',
     [string] $LocalDir,
     # 目标主目录。留空则用 $env:USERPROFILE。显式传入可把技能装到非默认位置。
     # 注意：$HOME / $Home 在 PowerShell 中是只读自动变量且大小写不敏感，

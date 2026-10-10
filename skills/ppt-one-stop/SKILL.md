@@ -1,7 +1,7 @@
 ---
 name: ppt-one-stop
 description: 当用户需要制作PPT、演示文稿、幻灯片、汇报材料时使用。覆盖从需求澄清、资料调研、大纲撰写、版面设计到生成 .pptx 文件的一站式完整流程，与用户逐步确认意向。当用户只说"做PPT""汇报一下""做份演示"而未指明只要大纲或只要配色设计时，优先使用本技能。
-version: 1.0.0
+version: 1.1.0
 whenToUse: 用户要一份完整的演示文稿成品（.pptx），需要从需求到成品走完整流程；若用户只要大纲或演讲稿用 ppt-content-generation，只要配色排版建议用 ppt-visual-design，修改已有 .pptx 用 office-pptx。
 ---
 
@@ -20,6 +20,8 @@ whenToUse: 用户要一份完整的演示文稿成品（.pptx），需要从需�
 | 生成 / 读写 .pptx | **`office-pptx`** | python-pptx 用法、check_office.py、渲染核对 |
 
 **第 4 步「版面设计」由本技能独有** —— 逐页决定配什么图/表/图表、用什么版式、字号取多少、元素落在哪里。这块规范见 `references/layout-design.md`，另两个技能都没有。
+
+**默认视觉档位是「高级」** —— 渐变背景、卡片投影、统一样式的图表。除用户明确要求简洁风外一律照做，实现细节见 `references/visual-style.md`。所有数值已在 python-pptx 1.0.2 上实测通过。
 
 > 三个原技能保持独立可用，本技能只做编排与衔接，不复制它们的内容。
 
@@ -56,6 +58,7 @@ whenToUse: 用户要一份完整的演示文稿成品（.pptx），需要从需�
 2. **目标听众**（选项题）—— 公司管理层 / 客户或投资人 / 团队同事 / 老师学生 / 公开演讲
 3. **场合与时长**（选项题）—— 5 分钟快闪 / 10-15 分钟常规汇报 / 20-30 分钟深度汇报 / 40 分钟以上培训
 4. **页数**（选项题）—— 6-8 页精简 / 10-12 页标准 / 15-20 页详细
+5. **视觉风格**（选项题）—— **默认「高级」** / 简洁白底 / 深色沉稳 / 跟随现有模板
 
 同时确认：有没有必须包含的内容？有没有现成的数据文件或图片素材？交付 `.pptx` 还是要 PDF？
 
@@ -101,14 +104,19 @@ whenToUse: 用户要一份完整的演示文稿成品（.pptx），需要从需�
 
 ### 第 4 步 · 版面设计
 
-**读 `references/layout-design.md`**，逐页定：
+**读 `references/layout-design.md`** 和 **`references/visual-style.md`**，逐页定：
 
-- **版式代号** —— `COVER` / `SECTION` / `BULLETS-3|4|5` / `SPLIT-60-40` / `SPLIT-50-50` / `CHART-HERO` / `TABLE` / `QUOTE` / `CLOSING`
+- **版式代号** —— `COVER` / `SECTION` / `BULLETS-3|4|5` / `SPLIT-60-40` / `SPLIT-50-50` / `CARD-N` / `CHART-HERO` / `CHART-SPLIT` / `TABLE` / `QUOTE` / `CLOSING`
 - **视觉类型** —— `none` / `text` / `chart` / `table` / `image` / `quote`
 - **字号层级** —— 按规范的层级表取值
 - **坐标** —— 按规范对应版式的坐标表
+- **配色令牌** —— 直接用 `visual-style.md` §1 的令牌，不现选颜色
 
 选视觉形态时用 `references/layout-design.md` §4 的**版式决策表**（按表达意图查首选/备选/禁忌）。
+
+> **默认走 `CARD-N` 和 `CHART-SPLIT`**，不是纯文字 `BULLETS-N`。
+> `BULLETS-N` 只在用户明确要朴素风格，或内容确实只有短句时用。
+> 多卡片布局的宽度**必须按公式算**（`layout-design.md` §1「多卡片等分」），不要硬编数字。
 
 **产出**：填满 `references/deck-plan.md` §1 的逐页计划表。
 
@@ -153,9 +161,21 @@ rPr.append(rPr.makeelement(qn('a:ea'), {'typeface': '微软雅黑'}))
 slide.notes_slide.notes_text_frame.text = "备注内容"
 ```
 
-**5. 图表用原生对象** —— `add_chart` 写入真实数据，保留可编辑的嵌入工作簿，不贴图片。
+**5. 图表用原生对象** —— `add_chart` 写入真实数据，保留可编辑的嵌入工作簿，不贴图片。生成后必须调用 `references/visual-style.md` §4.1 的 `style_chart()`。
 
-**6. 交付前跑两个检查**：
+**6. 高级视觉（默认档位必做）**：
+
+- 先跑 `visual-style.md` §2 的脚本预渲染 `bg_dark.png` / `bg_light.png` / `motif.png` 到 `assets/`
+- 深色页（封面 / 章节 / 结尾）铺 `bg_dark.png` + 左侧金色竖条
+- 正文页铺 `bg_light.png` + 右侧 `motif.png`
+- **背景必须下移到形状栈最底层**，否则会盖住文字：
+  ```python
+  slide.shapes._spTree.insert(2, pic._element)
+  ```
+- 卡片用 `visual-style.md` §3.2 的 `card()`，**`shadow.inherit = False` 必须写在 `shadow()` 之前**
+- 正文页优先用 `CARD-N` / `CHART-SPLIT` 版式，不用纯文字 `BULLETS-N`
+
+**7. 交付前跑三个检查**：
 
 ```text
 <python> <skill-directory>/../scripts/check_office.py <deck>.pptx --contains "关键标题" --count <页数> --out checks.json
@@ -170,7 +190,16 @@ missing = [i for i, s in enumerate(p.slides, 1) if not s.notes_slide.notes_text_
 print("缺备注页:", missing)   # 期望 []
 ```
 
-**7. 渲染核对** —— 按 `office-pptx` 的说明用 bundled LibreOffice 渲染图片，逐页检查溢出、遮挡、裁切，再跑 `references/deck-plan.md` §4 的验收清单。
+越界检测（照抄 `layout-design.md` §7.F 的脚本），期望输出 **越界总数: 0**：
+
+> 预览图会被对话界面缩放，看起来像被裁切，**但文件可能完全正常**。
+> 不要凭肉眼下结论，量坐标。
+
+**8. 渲染核对** —— 按 `office-pptx` 的说明用 bundled LibreOffice 渲染图片，逐页检查溢出、遮挡、裁切，再跑 `references/deck-plan.md` §4 的验收清单。
+
+> bundled 渲染器在 `resources/app.asar.unpacked/dsh/node_modules/@deepseek-ai/libreoffice-kit/lib/cli.js`，
+> 命令：`node <cli> render --input <deck>.pptx --output-dir preview --dpi 96`
+> 系统 `soffice` 不带中文字体时不要用，会出方框。
 
 **中间不打断**，完成后一次性汇报。
 
@@ -188,6 +217,8 @@ print("缺备注页:", missing)   # 期望 []
 | 大纲被否决 | 回第 3 步重写再确认，不带旧大纲下行 |
 | 版面被否决 | 回第 4 步重排 |
 | 渲染发现溢出/遮挡 | 改该页文案或降字号一档（不低于 12pt）；版面本身不合适则换版式代号 |
+| 预览图看着被裁但检测 0 越界 | 对话界面缩放造成的错觉，**以越界检测为准**，不要改文件 |
+| numpy / Pillow 不可用 | 降级为纯色背景（`bg_dark` → `PRIMARY`，`bg_light` → `WHITE`），在交付说明注明未用渐变 |
 | python-pptx 不支持的特性 | 记录限制并说明，不谎称完全保真 |
 | 用户要 PDF | 附加产物，用 `office-pptx` 提供的 bundled LibreOffice `convert` 生成，不另找系统 soffice |
 
@@ -197,5 +228,6 @@ print("缺备注页:", missing)   # 期望 []
 
 | 文件 | 内容 |
 |---|---|
-| `references/layout-design.md` | 画布与安全边距、12 列网格、字号层级、元素间距、版式决策表、标准版式坐标表、检查清单 |
+| `references/layout-design.md` | 画布与安全边距、12 列网格、多卡片等分公式、字号层级、元素间距、版式决策表、标准版式坐标表、检查清单、越界检测脚本 |
+| `references/visual-style.md` | **默认高级视觉标准**：设计令牌、渐变背景生成、卡片投影、图表统一样式、表格样式、失败对策 |
 | `references/deck-plan.md` | 逐页计划表模板、版式代号表、交接契约、验收清单、确认点 C 呈现格式 |
